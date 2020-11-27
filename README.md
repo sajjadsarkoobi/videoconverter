@@ -1,6 +1,19 @@
 # videoconverter
 Video Converter based on [AVAssetWriter](https://developer.apple.com/documentation/avfoundation/avassetwriter)
 
+## How to use
+copy VideoConverter.swift file into your project and:
+```swift
+        let converter = VideoConverter()
+        converter.delegate = self
+        converter.videoOutputSize = .videoSize1280x720
+        converter.videoOutputBitRate = .bitRate25
+        
+        //Send asset or url path of the video
+        converter.compressVideo(asset: AVAsset)
+        //converter.compressVideo(videoUrl: URL)
+```
+
 ## Predefined bitrtes:
 video bit rates |
 --- |
