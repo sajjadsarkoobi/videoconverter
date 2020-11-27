@@ -3,7 +3,7 @@
 //  VideoTrimmerExample
 //
 //  Created by Sajjad Sarkoobi on 10/22/20.
-//  Copyright © 2020 AveApps. All rights reserved.
+//  Copyright © 2020 Sajjad. All rights reserved.
 //
 
 import Foundation
@@ -27,8 +27,7 @@ enum videoConverterError:String,Error {
     case dataCreationFailed = "Faild to create data from video"
 }
 
-
-final class VideoConverter {
+class VideoConverter {
     
     public typealias completionType = ((Bool,URL?) -> Void)
     var delegate:VideoConverterDelegate?
@@ -43,14 +42,14 @@ final class VideoConverter {
     private var bitrate: NSNumber = NSNumber(value: 1250000)
     private var videoConvertSize : videoSizeEnum = .videoSize960x540
     
-    enum videoSizeEnum: CGFloat , CaseIterable{
+    public enum videoSizeEnum: CGFloat , CaseIterable{
         case videoSize640x480 = 480
         case videoSize960x540 = 540
         case videoSize1280x720 = 720
         case videoSize1920x1080 = 1080
     }
     
-    enum videoBitrateEnum: NSNumber , CaseIterable{
+    public enum videoBitrateEnum: NSNumber , CaseIterable{
         case bitRate12o5 = 1250000
         case bitRate25 = 2500000
         case bitRate30 = 3000000
