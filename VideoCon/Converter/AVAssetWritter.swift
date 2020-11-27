@@ -30,7 +30,7 @@ enum videoConverterError:String,Error {
 class VideoConverter {
     
     public typealias completionType = ((Bool,URL?) -> Void)
-    var delegate:VideoConverterDelegate?
+    weak var delegate:VideoConverterDelegate?
     
     private var assetWriter: AVAssetWriter!
     private var assetWriterVideoInput: AVAssetWriterInput!
@@ -78,28 +78,24 @@ class VideoConverter {
     
     
     //Compressing video based on AVAsset
-    public func compressVideo(asset : AVAsset,completion: @escaping completionType) {
-        startCompressingVideo(asset: asset) { (status, url) in
-            completion(status,url)
-        }
+    public func compressVideo(asset : AVAsset) {
+        startCompressingVideo(asset: asset)
     }
     
     //Compressing video based on Video URL path
-    public func compressVideo(videoUrl : URL,completion: @escaping completionType) {
+    public func compressVideo(videoUrl : URL) {
         let asset = AVAsset(url: videoUrl)
-        startCompressingVideo(asset: asset){ (status, url) in
-            completion(status,url)
-        }
+        startCompressingVideo(asset: asset)
     }
     
     //Removing a file at the specific URL
     public func removeFile(url at:URL,completion: @escaping completionType ){
         do {
         _ = try FileManager.default.removeItem(at: at)
-            completion(true,nil)
+            completion(true,at)
         }catch {
             self.classLog(log: "delete file error -> \(at)")
-            completion(false,nil)
+            completion(false,at)
         }
     }
     
@@ -126,7 +122,7 @@ class VideoConverter {
     }
     
     //MARK: video compression
-    private func startCompressingVideo(asset : AVAsset,completion: @escaping completionType) {
+    private func startCompressingVideo(asset : AVAsset) {
     
         //Check the asset before starting the conversion
         if !checkVideoFileBeforeConvert(asset: asset) {
@@ -261,9 +257,7 @@ class VideoConverter {
                     self?.classLog(log: "Audio converting finished")
                         audioFinished = true
                         if (audioFinished && videoFinished) {
-                            self?.closeWriter(assetWriter: writer, completion: { (status, url) in
-                                completion(status,url)
-                            })
+                            self?.closeWriter(assetWriter: writer)
                         }
                     
                     break;
@@ -284,9 +278,7 @@ class VideoConverter {
                     self?.classLog(log: "Video converting finished")
                         videoFinished = true
                         if (audioFinished && videoFinished) {
-                            self?.closeWriter(assetWriter: writer) { (status, url) in
-                                completion(status,url)
-                            }
+                            self?.closeWriter(assetWriter: writer)
                         }
                     
                     break;
@@ -297,7 +289,7 @@ class VideoConverter {
     
     
     //MARK: Closing the writer and create the output
-    private func closeWriter(assetWriter: AVAssetWriter?,completion: @escaping completionType) {
+    private func closeWriter(assetWriter: AVAssetWriter?) {
         guard let assetWriter = assetWriter else {
             delegate?.videoConverterCanceled(error: .assetWriterError)
             return
@@ -308,7 +300,7 @@ class VideoConverter {
             //MARK: Return URL of converted file
             self?.delegate?.videoConverterFinished(url: assetWriter.outputURL)
             self?.classLog(log: "Video File URL: \(assetWriter.outputURL)")
-            completion(true,assetWriter.outputURL)
+            
             do {
                 let data = try Data(contentsOf: assetWriter.outputURL)
                 self?.delegate?.videoConverterFinished(data: data)

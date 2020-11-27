@@ -55,13 +55,17 @@ class ViewController: UIViewController {
     private var originalPlayer: AVPlayer! {originalPlayerController.player}
     private var convertedPlayerController = AVPlayerViewController()
     private var convertedPlayer: AVPlayer! {convertedPlayerController.player}
-    private var converter:VideoConverter = VideoConverter()
+    //Converter instance
+    private var converter:VideoConverter!
     private var convertedURLs: [URL] = []
     
     
     //MARK:DidLoad
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        converter = VideoConverter()
+        converter.delegate = self
         setupUI()
         setupVideoPlayers()
         setOriginalAsset()
@@ -159,29 +163,13 @@ class ViewController: UIViewController {
         
         let selectedBitRate = VideoConverter.videoBitrateEnum.allCases.filter({"\($0)" == bitRateButton.title(for: .normal)}).first ?? .bitRate12o5
         converter.videoOutputBitRate = selectedBitRate
+        bitRateButton.setTitle("\(selectedBitRate)", for: .normal)
         
         let selectedVideoSize = VideoConverter.videoSizeEnum.allCases.filter({"\($0)" == outputSizeButton.title(for: .normal)}).first ?? .videoSize640x480
         converter.videoOutputSize = selectedVideoSize
+        outputSizeButton.setTitle("\(selectedVideoSize)", for: .normal)
         
-        converter.compressVideo(asset: asset ) {[weak self] (success, url) in
-            DispatchQueue.main.async {
-                self?.activityIndicator.stopAnimating()
-            }
-            if success {
-                if let url = url {
-                    self?.convertedURLs.append(url)
-                    DispatchQueue.main.async {
-                        self?.setConvertedAsset(url: url)
-                        self?.showMessage(title:"Convert completed",
-                                          message: """
-                                                    \(selectedBitRate)
-                                                    \(selectedVideoSize)
-                                                    converted size: \(url.fileSizeInMBString)
-                                                   """)
-                    }
-                }
-            }
-        }
+        converter.compressVideo(asset: asset)
     }
     
     
@@ -207,4 +195,36 @@ class ViewController: UIViewController {
         alertController.addAction(alertAction)
         self.present(alertController, animated: true, completion: nil)
     }
+}
+
+
+extension ViewController : VideoConverterDelegate {
+    func videoConverterFinished(url: URL) {
+        DispatchQueue.main.async {
+            self.activityIndicator.stopAnimating()
+        }
+        
+        self.convertedURLs.append(url)
+        DispatchQueue.main.async {
+            self.setConvertedAsset(url: url)
+            self.showMessage(title:"Convert completed",
+                             message: """
+                                    \(self.bitRateButton.title(for: .normal) ?? "")
+                                    \(self.outputSizeButton.title(for: .normal) ?? "")
+                                    converted size: \(url.fileSizeInMBString)
+                                   """)
+        }
+        
+        
+    }
+    
+    func videoConverterFinished(data: Data) {
+        
+    }
+    
+    func videoConverterCanceled(error: videoConverterError) {
+        
+    }
+    
+    
 }
